@@ -1,0 +1,12 @@
+CONFIG_IDF_TARGET="esp32s3"
+
+# Two HID interfaces: keyboard + mouse
+CONFIG_TINYUSB_HID_COUNT=2
+
+# UART0 belongs to kvmd: keep the console and logs off it
+CONFIG_ESP_CONSOLE_NONE=y
+CONFIG_BOOTLOADER_LOG_LEVEL_NONE=y
+CONFIG_LOG_DEFAULT_LEVEL_NONE=y
+
+# 1 ms ticks so the main loop polls USB every millisecond
+CONFIG_FREERTOS_HZ=1000

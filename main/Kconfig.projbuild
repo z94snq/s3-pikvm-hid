@@ -1,0 +1,52 @@
+menu "S3 PiKVM HID"
+
+    config S3HID_UART_NUM
+        int "UART number connected to the USB-UART bridge"
+        range 0 2
+        default 0
+        help
+            On ESP32-S3-DevKitC-1 style boards the "UART"/"COM" USB-C port is
+            a USB-UART bridge chip wired to UART0 (GPIO43 TX, GPIO44 RX).
+
+    config S3HID_UART_TX_PIN
+        int "UART TX GPIO (-1 = keep default)"
+        default -1
+
+    config S3HID_UART_RX_PIN
+        int "UART RX GPIO (-1 = keep default)"
+        default -1
+
+    config S3HID_UART_BAUD
+        int "UART baud rate (must match kvmd 'speed')"
+        default 115200
+
+    choice S3HID_DEFAULT_MOUSE
+        prompt "Mouse mode after power-on"
+        default S3HID_DEFAULT_MOUSE_ABS
+        help
+            Absolute mode moves the pointer exactly where you point in the web UI.
+            Relative mode is a boot-protocol mouse that some BIOSes need.
+            You can switch at runtime from the PiKVM web UI; the choice is kept
+            until the board loses power.
+        config S3HID_DEFAULT_MOUSE_ABS
+            bool "Absolute"
+        config S3HID_DEFAULT_MOUSE_REL
+            bool "Relative (boot protocol)"
+    endchoice
+
+    config S3HID_USB_VID
+        hex "USB vendor ID"
+        default 0x1209
+    config S3HID_USB_PID
+        hex "USB product ID"
+        default 0x0001
+        help
+            0x1209:0x0001 is the pid.codes test PID, fine for personal use.
+    config S3HID_USB_MANUFACTURER
+        string "USB manufacturer string"
+        default "DIY"
+    config S3HID_USB_PRODUCT
+        string "USB product string"
+        default "S3 PiKVM HID"
+
+endmenu

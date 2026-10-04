@@ -1,0 +1,11 @@
+# ESP-IDF build output and generated config (sdkconfig.defaults is the source of truth)
+build/
+sdkconfig
+sdkconfig.old
+managed_components/
+
+# Host test binary
+hosttest
+
+__pycache__/
+*.pyc
