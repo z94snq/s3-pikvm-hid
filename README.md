@@ -24,6 +24,11 @@ Any ESP32-S3 board with **two USB-C ports**, where one is the native USB
 and most clones are like this. The defaults assume that chip is wired to UART0
 (GPIO43/44); change it in menuconfig if your board differs.
 
+Tested on a **Freenove ESP32-S3-WROOM** board (CH343 bridge, `1a86:55d3`,
+shows up as `/dev/ttyACM0`) with PiKVM OS on a Raspberry Pi 5: keyboard,
+absolute and relative mouse, mode switching, and BIOS/UEFI setup all work.
+Other boards should work the same way but haven't been tried.
+
 ## Build and flash
 
 You need [ESP-IDF](https://docs.espressif.com/projects/esp-idf/en/stable/esp32s3/get-started/) 5.1 or newer.
@@ -33,7 +38,7 @@ cd s3-pikvm-hid
 idf.py set-target esp32s3
 idf.py menuconfig        # optional: "S3 PiKVM HID" menu
 idf.py build
-idf.py -p /dev/ttyUSB0 flash    # use the UART/COM port
+idf.py -p /dev/ttyACM0 flash    # use the UART/COM port (CP210x/CH340 boards: /dev/ttyUSB0)
 ```
 
 The first build downloads `esp_tinyusb` and `tinyusb` from the Espressif component registry.
@@ -52,7 +57,7 @@ This checks the firmware without involving the Pi:
 
 ```sh
 pip install pyserial
-python3 tools/s3hid_test.py /dev/ttyUSB0      # Windows: COM5, macOS: /dev/cu.usbserial-*
+python3 tools/s3hid_test.py /dev/ttyACM0      # CP210x/CH340: /dev/ttyUSB0, Windows: COM5, macOS: /dev/cu.usbserial-*
 ```
 
 It should print `PING -> OK keyboard=usb mouse=usb (absolute)`, type
@@ -95,8 +100,9 @@ If PING works but nothing types, check the native USB cable (it must carry data)
 5. Apply and lock the filesystem again:
 
    ```sh
-   udevadm control --reload && udevadm trigger
-   ls -l /dev/kvmd-hid          # should point to ttyUSB0 or ttyACM0
+   udevadm control --reload && udevadm trigger --action=add --subsystem-match=tty
+   udevadm settle
+   ls -l /dev/kvmd-hid          # should point to ttyACM0 (CH343) or ttyUSB0 (CP210x/CH340)
    systemctl restart kvmd
    ro
    ```
@@ -120,7 +126,8 @@ use `idf.py menuconfig` → S3 PiKVM HID → Mouse mode after power-on.
 resets the S3 when the serial port is opened. kvmd retries, so it usually
 recovers within a second or two. If it keeps happening, check your board's
 schematic for the DTR/RTS → EN/GPIO0 transistors; a few boards have a jumper
-to disable them.
+to disable them. The Freenove ESP32-S3-WROOM (CH343) does not reset: kvmd
+raises DTR and RTS together, which its auto-reset circuit ignores.
 
 **Keyboard works in the OS but not in the BIOS.** The keyboard is already a boot
 keyboard. If only the mouse is missing, switch to relative mode.

@@ -19,7 +19,13 @@ the same serial protocol so kvmd's standard `serial` HID plugin works unchanged.
 - 2026-10-04: works on real hardware from a plain Pi 5 (Raspberry Pi OS): PING OK,
   tools/s3hid_test.py typed and moved the mouse on the target. Opening the port
   with DTR/RTS low did not reset the board.
-- Not yet tested under kvmd on PiKVM OS.
+- v0.1.0 released (GitHub pre-release, tag v0.1.0 = commit 5dbb0a2): merged image
+  s3-pikvm-hid-v0.1.0-esp32s3.bin (flash at 0x0), parts zip, SHA256SUMS.
+- 2026-10-05: works under kvmd on PiKVM OS (Pi 5), firmware v0.1.0. Web UI shows
+  keyboard/mouse "free" (= online, idle); typing, absolute and relative mouse work.
+  A mouse-mode switch reboots the board (one USB disconnect/connect on the target, expected).
+  Restarting kvmd does NOT reset the board (no USB disconnect on the target).
+  Keyboard and mouse also work in the target's BIOS/UEFI setup.
 
 ## Architecture
 - `main/core.c`: whole protocol (parse 8-byte request, dispatch, build 8-byte response).
@@ -52,8 +58,12 @@ kvmd:
         reset_self: true
 ```
 Plus a udev rule symlinking the bridge chip's tty to /dev/kvmd-hid (see README;
-for the Freenove board use idVendor 1a86, idProduct 55d3).
+for the Freenove board use idVendor 1a86, idProduct 55d3), in
+/etc/udev/rules.d/99-kvmd-hid.rules. The kvmd user is already in the uucp group,
+so no GROUP/MODE is needed. After `udevadm trigger`, run `udevadm settle` before
+checking the symlink.
 PiKVM's root filesystem is read-only: run `rw` before editing, `ro` after.
+Check the merged config with `kvmd -m`.
 
 ## Rules
 - UART0 belongs to kvmd. Never enable the console, logs, or printf on it
@@ -82,6 +92,9 @@ python3 tools/s3hid_test.py /dev/ttyACM0
 
 ## Next tasks, in order
 1. ~~Flash and run tools/s3hid_test.py from a PC.~~ Done 2026-10-04.
-2. Move it to the Pi 5 running PiKVM OS: udev rule, override.yaml, check `journalctl -u kvmd`.
-3. Test in BIOS/UEFI on the target (keyboard, relative mouse mode).
-4. Check whether kvmd opening the serial port resets the board (DTR/RTS auto-reset) and fix it if so.
+2. ~~Move it to the Pi 5 running PiKVM OS: udev rule, override.yaml, check `journalctl -u kvmd`.~~ Done 2026-10-05.
+3. ~~Test in BIOS/UEFI on the target (keyboard, relative mouse mode).~~ Done 2026-10-05: works.
+4. ~~Check whether kvmd opening the serial port resets the board (DTR/RTS auto-reset) and fix it if so.~~
+   Done 2026-10-05: no reset on the Freenove board, no fix needed. Verified with kvmd stopped:
+   3x pyserial open/close like kvmd (DTR+RTS asserted together) = no USB disconnect on
+   the target; forced esptool-style pulse (RTS on, DTR off) = disconnect, so the test detects resets.
