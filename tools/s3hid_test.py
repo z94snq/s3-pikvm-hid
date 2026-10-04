@@ -3,7 +3,9 @@
 Talk to the S3 HID from a PC the same way kvmd does, before involving the Pi.
 
     pip install pyserial
-    python3 s3hid_test.py /dev/ttyUSB0          (Linux; macOS: /dev/cu.usbserial-*, Windows: COM5)
+    python3 s3hid_test.py /dev/ttyACM0          (Linux, CH343 bridge e.g. Freenove;
+                                                 CP210x/CH340: /dev/ttyUSB0;
+                                                 macOS: /dev/cu.usbserial-*, Windows: COM5)
 
 Plug the S3's UART/bridge port into this PC and its native USB port into a
 target (it can be the same PC: open a text editor and watch it type).
@@ -81,7 +83,7 @@ def type_text(tty: serial.Serial, text: str) -> None:
 
 
 def main() -> None:
-    port = sys.argv[1] if len(sys.argv) > 1 else "/dev/ttyUSB0"
+    port = sys.argv[1] if len(sys.argv) > 1 else "/dev/ttyACM0"
     # dsrdtr/rtscts off and DTR/RTS low: avoids resetting boards with auto-reset circuits
     tty = serial.Serial()
     tty.port, tty.baudrate, tty.timeout = port, 115200, 2.0
